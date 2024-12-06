@@ -3,8 +3,6 @@
 
 import streamlit as st
 import itertools
-import matplotlib.pyplot as plt
-import networkx as nx
 
 # Partie I : Jeux statiques
 def jeu_statique(payoffs_j1, payoffs_j2):
@@ -42,57 +40,6 @@ def explorer_arbre(noeud, chemin):
     else:
         resultats.append((chemin, noeud))
     return resultats
-
-def dessiner_matrice(payoffs_j1, payoffs_j2):
-    """
-    Dessine la matrice des gains pour les deux joueurs.
-    """
-    fig, ax = plt.subplots(figsize=(6, 6))
-    ax.set_axis_off()
-    n_rows = len(payoffs_j1)
-    n_cols = len(payoffs_j1[0])
-
-    # Dessin des cellules
-    for i in range(n_rows):
-        for j in range(n_cols):
-            rect = plt.Rectangle((j, n_rows - i - 1), 1, 1, fill=None, edgecolor='black', linewidth=1)
-            ax.add_patch(rect)
-            ax.text(j + 0.5, n_rows - i - 0.5, f"({payoffs_j1[i][j]}, {payoffs_j2[i][j]})",
-                    ha='center', va='center', fontsize=10)
-
-    ax.set_xlim(0, n_cols)
-    ax.set_ylim(0, n_rows)
-    ax.set_xticks([])
-    ax.set_yticks([])
-    return fig
-
-def dessiner_arbre(arbre, chemin=[]):
-    """
-    Dessine un arbre de jeu récursivement avec NetworkX.
-    """
-    G = nx.DiGraph()
-    labels = {}
-
-    def ajouter_noeuds(noeud, chemin=[]):
-        if isinstance(noeud, dict):
-            for action, sous_noeud in noeud.items():
-                parent = " -> ".join(chemin) if chemin else "Racine"
-                enfant = " -> ".join(chemin + [action])
-                G.add_edge(parent, enfant)
-                labels[(parent, enfant)] = action
-                ajouter_noeuds(sous_noeud, chemin + [action])
-        else:
-            parent = " -> ".join(chemin) if chemin else "Racine"
-            G.add_node(parent, payoff=noeud)
-
-    ajouter_noeuds(arbre)
-    pos = nx.nx_agraph.graphviz_layout(G, prog="dot")
-    fig, ax = plt.subplots(figsize=(12, 8))
-
-    nx.draw(G, pos, with_labels=True, ax=ax, node_size=3000, node_color="lightblue", font_size=10, font_weight="bold")
-    edge_labels = {(u, v): labels.get((u, v), "") for u, v in G.edges()}
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=8)
-    return fig
 
 # Streamlit App
 st.set_page_config(page_title="Théorie des Jeux", page_icon="🎲", layout="wide")
@@ -134,10 +81,6 @@ with onglets[1]:
         else:
             st.write("Aucun équilibre de Nash trouvé.")
 
-        st.write("**Représentation de la Matrice des Gains**")
-        fig = dessiner_matrice(payoffs_j1, payoffs_j2)
-        st.pyplot(fig)
-
 with onglets[2]:
     st.header("Jeux Dynamiques : Exploration de l'arbre")
     arbre_texte = st.text_area("Définissez l'arbre du jeu en format dictionnaire", value="{\n    'A': {\n        'AA': (3, 2),\n        'AB': {\n            'ABA': (0, 1),\n            'ABB': (4, 0)\n        }\n    },\n    'B': {\n        'BA': (1, 1),\n        'BB': {\n            'BBA': (2, 3),\n            'BBB': (0, 0)\n        }\n    }\n}")
@@ -149,11 +92,6 @@ with onglets[2]:
             st.write("Chemins et gains dans l'arbre :")
             for chemin, gain in chemins:
                 st.write(f"Chemin : {' -> '.join(chemin)}, Gains : {gain}")
-
-            st.write("**Représentation de l'Arbre**")
-            fig = dessiner_arbre(arbre)
-            st.pyplot(fig)
-
         except Exception as e:
             st.error(f"Erreur dans la définition de l'arbre : {e}")
 
