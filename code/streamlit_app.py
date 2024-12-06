@@ -1,16 +1,11 @@
-# Travail de Maison - Théorie des Jeux avec Streamlit
-# Objectif : Implémenter et analyser des jeux classiques en théorie des jeux à l'aide d'une application Streamlit.
-
 import streamlit as st
 import itertools
+import matplotlib.pyplot as plt
+import numpy as np
+from graphviz import Digraph
 
-# Partie I : Jeux statiques
+# Partie I : Fonctions pour les jeux statiques
 def jeu_statique(payoffs_j1, payoffs_j2):
-    """
-    payoffs_j1: Matrice de gains pour le Joueur 1 (liste de listes).
-    payoffs_j2: Matrice de gains pour le Joueur 2 (liste de listes).
-    Retourne les équilibres de Nash.
-    """
     n_strategies_j1 = len(payoffs_j1)
     n_strategies_j2 = len(payoffs_j1[0])
 
@@ -25,14 +20,26 @@ def jeu_statique(payoffs_j1, payoffs_j2):
                 resultats.append((i + 1, j + 1))
     return resultats
 
+def afficher_matrice(payoffs_j1, payoffs_j2, equilibres):
+    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+    axes[0].imshow(payoffs_j1, cmap="cool", alpha=0.8)
+    axes[1].imshow(payoffs_j2, cmap="cool", alpha=0.8)
+
+    for i in range(len(payoffs_j1)):
+        for j in range(len(payoffs_j1[0])):
+            axes[0].text(j, i, f"{payoffs_j1[i][j]}", ha="center", va="center", color="black")
+            axes[1].text(j, i, f"{payoffs_j2[i][j]}", ha="center", va="center", color="black")
+    
+    for eq in equilibres:
+        axes[0].scatter(eq[1] - 1, eq[0] - 1, color="red", s=100)
+        axes[1].scatter(eq[1] - 1, eq[0] - 1, color="red", s=100)
+
+    axes[0].set_title("Gains Joueur 1")
+    axes[1].set_title("Gains Joueur 2")
+    st.pyplot(fig)
+
 # Partie II : Jeux dynamiques
 def explorer_arbre(noeud, chemin):
-    """
-    Explore un arbre de jeu récursivement.
-    noeud: Dictionnaire ou feuille de l'arbre.
-    chemin: Chemin actuel dans l'arbre.
-    Retourne une liste des chemins et gains.
-    """
     resultats = []
     if isinstance(noeud, dict):
         for action, sous_noeud in noeud.items():
@@ -41,22 +48,46 @@ def explorer_arbre(noeud, chemin):
         resultats.append((chemin, noeud))
     return resultats
 
+def dessiner_arbre(arbre, nom="Arbre de jeu"):
+    def ajouter_noeud(g, noeud, parent=None, action=None):
+        if isinstance(noeud, dict):
+            for act, sous_noeud in noeud.items():
+                nouveau_noeud = f"{parent}_{act}" if parent else act
+                g.node(nouveau_noeud, label=act)
+                if parent:
+                    g.edge(parent, nouveau_noeud, label=action if action else "")
+                ajouter_noeud(g, sous_noeud, parent=nouveau_noeud, action=act)
+        else:
+            feuille = f"{parent}_resultat" if parent else "resultat"
+            g.node(feuille, label=str(noeud), shape="box")
+            g.edge(parent, feuille, label=action if action else "")
+
+    g = Digraph(nom, format="png")
+    ajouter_noeud(g, arbre)
+    return g
+
 # Streamlit App
 st.set_page_config(page_title="Théorie des Jeux", page_icon="🎲", layout="wide")
 st.title("Analyse de Théorie des Jeux")
 
 # Onglets horizontaux
-onglets = st.tabs(["Accueil", "Jeux Statique", "Jeux Dynamique", "Notions de Théorie des Jeux"])
+onglets = st.tabs([
+    "Accueil",
+    "Jeux Statique (Information Complète)",
+    "Jeux Statique (Information Incomplète)",
+    "Jeux Dynamique (Information Complète)",
+    "Jeux Dynamique (Information Incomplète)",
+    "Notions de Théorie des Jeux"
+])
 
+# Accueil
 with onglets[0]:
     st.header("Bienvenue")
-    st.write("Cette application permet d'analyser des jeux en théorie des jeux. Utilisez les onglets pour naviguer entre les sections :")
-    st.markdown("- **Jeux Statique** : Trouver les équilibres de Nash pour une matrice de gains donnée.")
-    st.markdown("- **Jeux Dynamique** : Explorer un arbre de jeu défini par l'utilisateur.")
-    st.markdown("- **Notions de Théorie des Jeux** : Découvrir les concepts clés.")
+    st.write("Explorez les jeux classiques en théorie des jeux avec des visualisations et des analyses interactives.")
 
+# Jeux Statique (Information Complète)
 with onglets[1]:
-    st.header("Jeux Statique : Équilibres de Nash")
+    st.header("Jeux Statique à Information Complète")
     rows_j1 = st.number_input("Nombre de stratégies Joueur 1", min_value=2, max_value=10, value=2)
     cols_j2 = st.number_input("Nombre de stratégies Joueur 2", min_value=2, max_value=10, value=2)
 
@@ -74,33 +105,32 @@ with onglets[1]:
 
     if st.button("Calculer les Équilibres de Nash"):
         equilibres = jeu_statique(payoffs_j1, payoffs_j2)
-        if equilibres:
-            st.write("Équilibres de Nash trouvés :")
-            for eq in equilibres:
-                st.write(f"Joueur 1 : Stratégie {eq[0]}, Joueur 2 : Stratégie {eq[1]}")
-        else:
-            st.write("Aucun équilibre de Nash trouvé.")
+        afficher_matrice(payoffs_j1, payoffs_j2, equilibres)
 
+# Jeux Statique (Information Incomplète)
 with onglets[2]:
-    st.header("Jeux Dynamiques : Exploration de l'arbre")
+    st.header("Jeux Statique à Information Incomplète")
+    st.write("Modèle et analyse des jeux avec des types et des probabilités.")
+
+# Jeux Dynamique (Information Complète)
+with onglets[3]:
+    st.header("Jeux Dynamique à Information Complète")
     arbre_texte = st.text_area("Définissez l'arbre du jeu en format dictionnaire", value="{\n    'A': {\n        'AA': (3, 2),\n        'AB': {\n            'ABA': (0, 1),\n            'ABB': (4, 0)\n        }\n    },\n    'B': {\n        'BA': (1, 1),\n        'BB': {\n            'BBA': (2, 3),\n            'BBB': (0, 0)\n        }\n    }\n}")
 
-    if st.button("Explorer l'arbre"):
+    if st.button("Afficher l'arbre de jeu"):
         try:
             arbre = eval(arbre_texte)
-            chemins = explorer_arbre(arbre, [])
-            st.write("Chemins et gains dans l'arbre :")
-            for chemin, gain in chemins:
-                st.write(f"Chemin : {' -> '.join(chemin)}, Gains : {gain}")
+            g = dessiner_arbre(arbre)
+            st.graphviz_chart(g.source)
         except Exception as e:
             st.error(f"Erreur dans la définition de l'arbre : {e}")
 
-with onglets[3]:
+# Jeux Dynamique (Information Incomplète)
+with onglets[4]:
+    st.header("Jeux Dynamique à Information Incomplète")
+    st.write("Explorez des arbres de jeu où les joueurs ont des types inconnus avec des probabilités associées.")
+
+# Notions de Théorie des Jeux
+with onglets[5]:
     st.header("Notions de Théorie des Jeux")
-    st.write("La théorie des jeux est une branche des mathématiques qui analyse les interactions stratégiques entre des agents rationnels.")
-    st.subheader("Équilibre de Nash")
-    st.write("Un équilibre de Nash est une situation où aucun joueur ne peut améliorer son gain en changeant unilatéralement de stratégie.")
-    st.subheader("Jeux Dynamiques")
-    st.write("Les jeux dynamiques modélisent des décisions séquentielles où les joueurs agissent à tour de rôle en observant les actions précédentes.")
-    st.subheader("Applications")
-    st.write("La théorie des jeux est utilisée en économie, biologie, politique, informatique, etc.")
+    st.write("Découvrez les concepts clés de la théorie des jeux avec des illustrations.")
