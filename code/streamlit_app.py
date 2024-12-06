@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Dec  6 23:00:30 2024
-
-@author: pc
-"""
-
 # Travail de Maison - Théorie des Jeux avec Streamlit
 # Objectif : Implémenter et analyser des jeux classiques en théorie des jeux à l'aide d'une application Streamlit.
 
@@ -52,20 +45,20 @@ def explorer_arbre(noeud, chemin):
 st.set_page_config(page_title="Théorie des Jeux", page_icon="🎲", layout="wide")
 st.title("Analyse de Théorie des Jeux")
 
-# Navigation par onglets
-onglet = st.sidebar.selectbox("Choisissez une section :", ["Accueil", "Jeux Statique", "Jeux Dynamique", "Notions de Théorie des Jeux"])
+# Onglets horizontaux
+onglets = st.tabs(["Accueil", "Jeux Statique", "Jeux Dynamique", "Notions de Théorie des Jeux"])
 
-if onglet == "Accueil":
+with onglets[0]:
     st.header("Bienvenue")
     st.write("Cette application permet d'analyser des jeux en théorie des jeux. Utilisez les onglets pour naviguer entre les sections :")
     st.markdown("- **Jeux Statique** : Trouver les équilibres de Nash pour une matrice de gains donnée.")
     st.markdown("- **Jeux Dynamique** : Explorer un arbre de jeu défini par l'utilisateur.")
     st.markdown("- **Notions de Théorie des Jeux** : Découvrir les concepts clés.")
 
-elif onglet == "Jeux Statique":
+with onglets[1]:
     st.header("Jeux Statique : Équilibres de Nash")
-    rows_j1 = st.sidebar.number_input("Nombre de stratégies Joueur 1", min_value=2, max_value=10, value=2)
-    cols_j2 = st.sidebar.number_input("Nombre de stratégies Joueur 2", min_value=2, max_value=10, value=2)
+    rows_j1 = st.number_input("Nombre de stratégies Joueur 1", min_value=2, max_value=10, value=2)
+    cols_j2 = st.number_input("Nombre de stratégies Joueur 2", min_value=2, max_value=10, value=2)
 
     st.subheader("Matrice de gains pour Joueur 1")
     payoffs_j1 = []
@@ -88,7 +81,7 @@ elif onglet == "Jeux Statique":
         else:
             st.write("Aucun équilibre de Nash trouvé.")
 
-elif onglet == "Jeux Dynamique":
+with onglets[2]:
     st.header("Jeux Dynamiques : Exploration de l'arbre")
     arbre_texte = st.text_area("Définissez l'arbre du jeu en format dictionnaire", value="{\n    'A': {\n        'AA': (3, 2),\n        'AB': {\n            'ABA': (0, 1),\n            'ABB': (4, 0)\n        }\n    },\n    'B': {\n        'BA': (1, 1),\n        'BB': {\n            'BBA': (2, 3),\n            'BBB': (0, 0)\n        }\n    }\n}")
 
@@ -102,7 +95,7 @@ elif onglet == "Jeux Dynamique":
         except Exception as e:
             st.error(f"Erreur dans la définition de l'arbre : {e}")
 
-elif onglet == "Notions de Théorie des Jeux":
+with onglets[3]:
     st.header("Notions de Théorie des Jeux")
     st.write("La théorie des jeux est une branche des mathématiques qui analyse les interactions stratégiques entre des agents rationnels.")
     st.subheader("Équilibre de Nash")
